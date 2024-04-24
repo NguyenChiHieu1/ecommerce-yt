@@ -40,7 +40,7 @@ var userSchema = new mongoose.Schema({
     },
     refreshToken: {
         type: String,
-
+        // luu db: so sanh khi muốn đổi token khi hét hạn; nếu cái này ko đúng| quá hạn =>  đăng nhập lại
     },
     passwordChangeAt: {
         type: String
@@ -62,6 +62,13 @@ userSchema.pre('save', async function (next) {
     const salt = bcrypt.genSaltSync(10)
     this.password = await bcrypt.hash(this.password, salt)
 })
-
+userSchema.methods = {
+    //arrow function KHÔNG dùng đc ở đây(xung đột giá trị this)
+    isCorrectPassword: async function (password) {
+        //compare giup so sanh hash->pass dung >< pass mới
+        //return true || false
+        return await bcrypt.compare(password, this.password)
+    }
+}
 //Export the model
 module.exports = mongoose.model('User', userSchema); 

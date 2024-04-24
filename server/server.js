@@ -2,9 +2,10 @@ const express = require('express')
 require('dotenv').config()
 const dbConnect = require('./config/dbconnect')
 const initRoutes = require('./routes')
-const { init } = require('./models/userModel')
+const cookieParser = require('cookie-parser')
 
 const app = express()
+app.unsubscribe(cookieParser())
 const port = process.env.PORT || 8888
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
