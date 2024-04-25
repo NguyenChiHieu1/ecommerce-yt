@@ -5,7 +5,8 @@ const initRoutes = require('./routes')
 const cookieParser = require('cookie-parser')
 
 const app = express()
-app.unsubscribe(cookieParser())
+//để ý có thể sai khi sử dụng Ai hôc trợ code
+app.use(cookieParser())
 const port = process.env.PORT || 8888
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

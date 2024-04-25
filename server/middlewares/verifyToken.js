@@ -11,6 +11,7 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
         //kiem tra token giong
         //verify lỗi -> err != null, ko xác thực
         jwt.verify(token, process.env.JWT_SECRET, (err, decode) => {
+            // console.log(err)
             if (err) return res.status(401).json({
                 success: false,
                 mes: 'Invalid access token'
