@@ -2,11 +2,13 @@ const userModel = require('../models/userModel')
 const asyncHandler = require('express-async-handler')
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwt')
 const jwt = require('jsonwebtoken')
+const sendMail = require('../ultils/sendMail')
+const crypto = require('crypto')
 
 
 const register = asyncHandler(async (req, res) => {
-    const { email, password, firstname, lastname } = req.body
-    if (!email || !password || !firstname || !lastname)
+    const { email, password, firstname, lastname, mobile } = req.body
+    if (!email || !password || !firstname || !lastname || !mobile)
         return res.status(400).json({
             sucess: false,
             mes: 'Missing inputs'
@@ -95,10 +97,61 @@ const logout = asyncHandler(async (req, res) => {
         message: 'Logged is done'
     })
 })
+
+// reset password
+//client gửi email
+//Server check email có hợp lệ hay không => gửi email + kèm theo link (pasword change token)
+//Client check email => Click link đã gửi email
+//Client gửi api kèm token
+//check token giống với token mà server gửi email không
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.query
+    if (!email) throw new Error('Missing email')
+    const user = await userModel.findOne({ email })
+    if (!user) throw new Error('User not found')
+    const resetToken = user.createPasswordChangedToken()
+    await user.save()
+    // lưu ... vào db rồi giwof gửi email.
+    //Bảo mật 2 lớp bằng ddienj thoại
+
+    const html = `Xin vui lòng click vào link dưới đây để thay đổi mật khẩu. Link này sẽ hết hạn sau 15 phút kể từ bây giờ. 
+    <a href=${process.env.URL_SERVER}/api/user/reset-password/${resetToken}>Click here</a>`
+
+    const data = {
+        email: email,
+        html
+    }
+    const rs = await sendMail(data)
+    return res.status(200).json({
+        success: true,
+        rs
+    })
+})
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { password, token } = req.body
+    if (!password || !token) throw new Error('Missing password or token')
+    const passwordResetToken = crypto.createHash('sha256').update(token).digest('hex')
+    const user = await userModel.findOne({ passwordResetToken, passwordResetExpires: { $gt: Date.now() } })
+    if (!user) throw new Error('Invalid reset token')
+    user.password = password
+    user.passwordResetToken = undefined
+    user.passwordChangeAt = Date.now()
+    user.passwordResetExpires = undefined
+    await user.save()
+    return res.status(200).json({
+        success: user ? true : false,
+        mes: user ? 'Updated password' : 'Something went wrong'
+    })
+
+})
+
 module.exports = {
     register,
     login,
     getCurrent,
     refreshAccessToken,
-    logout
+    logout,
+    forgotPassword,
+    resetPassword
 }
