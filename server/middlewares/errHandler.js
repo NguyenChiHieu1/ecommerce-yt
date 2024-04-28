@@ -5,6 +5,7 @@ const notFound = (req, res, next) => {
 }
 
 //để cái next mới xài dc
+//(error, req, res, next) Bắt buộc để hứng lỗi từ asyncHandler
 const errHandler = (error, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode
     return res.status(statusCode).json({

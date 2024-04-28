@@ -35,7 +35,7 @@ var userSchema = new mongoose.Schema({
     },
     address: [{ type: mongoose.Types.ObjectId, ref: 'Address' }],
     wishlist: [{ type: mongoose.Types.ObjectId, ref: 'Product' }],
-    isBlock: {
+    isBlocked: {
         type: Boolean,
         default: false
     },
@@ -61,6 +61,7 @@ userSchema.pre('save', async function (next) {
         next()
     }
     const salt = bcrypt.genSaltSync(10)
+    // console.log(salt.length)
     this.password = await bcrypt.hash(this.password, salt)
 })
 userSchema.methods = {
