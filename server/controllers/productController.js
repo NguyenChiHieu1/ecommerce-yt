@@ -151,7 +151,9 @@ const ratings = asyncHandler(async (req, res) => {
     })
 })
 
+//upload image products : last
 
+//the end -> 
 
 module.exports = {
     createdProduct,
