@@ -184,6 +184,55 @@ const updateUserByAdmin = asyncHandler(async (req, res) => {
     })
 })
 
+//update Address user
+const updateAddress = asyncHandler(async (req, res) => {
+    const { _id } = req.user
+    console.log(_id)
+    if (!req.body.address || !_id) throw new Error('Missing inputs')
+    const response = await userModel.findByIdAndUpdate(_id, { $push: { address: req.body.address } }, { new: true }).select('-password -role -refreshToken')
+    return res.status(200).json({
+        success: response ? true : false,
+        updateAddress: response ? response : 'Some thing went wrong'
+    })
+})
+
+//Error trong đăng sp vào giỏ
+const updateCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user
+    const { product, quantity, color } = req.body
+
+    // Kiểm tra đầu vào
+    if (!product || !quantity || !color) throw new Error('Missing inputs')
+
+    // Lấy thông tin giỏ hàng của người dùng
+    const user = await userModel.findById(_id).select('cart')
+    if (!user) throw new Error('User not found')
+
+    let indexProduct = 0;
+    const alreadyProduct = await user.cart.filter(el => el.product.toString() === product)
+    if (alreadyProduct) {
+        alreadyProduct.forEach((element, index) => {
+            if (element.color.toString() === color) {
+                indexProduct++
+                return alreadyProduct[index].quantity = quantity
+            }
+        })
+        console.log(indexProduct)
+        if (indexProduct === 0) {
+            user.cart.push({ product, quantity, color })
+        }
+    } else {
+        user.cart.push({ product, quantity, color })
+    }
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json({
+        success: updatedUser ? true : false,
+        updateUser: updatedUser ? updatedUser : 'Update cart false'
+    });
+
+})
 module.exports = {
     register,
     login,
@@ -195,5 +244,7 @@ module.exports = {
     getUser,
     deleteUser,
     updateUser,
-    updateUserByAdmin
+    updateUserByAdmin,
+    updateAddress,
+    updateCart
 }
